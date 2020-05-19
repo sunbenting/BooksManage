@@ -51,6 +51,18 @@
         <el-col :span="2" style="margin-right:20px">
           <el-button type="primary" icon="el-icon-refresh-left" size="small" @click="withdraw">审核驳回</el-button>
         </el-col>
+        <el-col :span="2" style="margin-right:20px">
+          <download-excel
+            class="export-excel-wrapper"
+            :data="json_data"
+            :fields="json_fields"
+            name="已审核订单导出数据.xls"
+          >
+            <!-- 上面可以自定义自己的样式，还可以引用其他组件button -->
+            <el-button type="primary" size="small" icon="el-icon-download">导出已审核订单</el-button>
+          </download-excel>
+          <!-- <el-button type="primary" icon="el-icon-download" size="small" @click="outPass">导出已审核订单</el-button> -->
+        </el-col>
       </el-row>
       <el-row>
         <el-col :span="24">
@@ -108,6 +120,24 @@ import { Col } from "element-ui";
 export default {
   data() {
     return {
+      json_fields: {
+        "订单编号": "orderNumber", //常规字段
+        "图书名称": "bookName", //支持嵌套属性
+        "订单数量": "bookNumber",
+        "提交人": "submitter",
+        "提交日期": "submitTime",
+        "审核状态": "auditStatus",
+        "审核人": "reviewer"
+      },
+      json_data: [],
+      json_meta: [
+        [
+          {
+            key: "charset",
+            value: "utf-8"
+          }
+        ]
+      ],
       activeName: "",
       tablist: [],
       options: [
@@ -196,6 +226,12 @@ export default {
         return obj;
       });
       this.tableData = arr;
+     this.json_data=  arr.map(item=>{
+       if(item.auditStatus==2){
+         return item;
+       }
+     })
+     console.log('this.json_data :>> ', this.json_data);
       this.total = Number(total);
     },
     handleClick(tab, event) {
@@ -218,7 +254,7 @@ export default {
         start: 0,
         PCID: this.activeName
       };
-        this.init();
+      this.init();
     },
     invalidProperty(obj) {
       let b = {};
@@ -243,11 +279,12 @@ export default {
     },
     //page事件
     handleSizeChange(val) {
-     this.requestParams.limit = val;
+      this.requestParams.limit = val;
       this.init();
     },
     handleCurrentChange(val) {
-      this.params.start = (val - 1) * this.params.limit;
+       this.currentPage=val;
+      this.requestParams.start = (val - 1) * this.requestParams.limit;
       this.init();
     },
 
@@ -289,7 +326,8 @@ export default {
       this.init();
       this.$message.success("审核驳回");
     },
-
+    //导出
+    outPass() {},
     cacle(formName) {
       this.$refs[formName].resetFields();
       this.dialogFormVisible = false;

@@ -18,7 +18,7 @@ const  getOrderList=(params)=> {
     })
   }
   
-//获取书籍管理列表
+//审核驳回
 const  checkReject=(data)=> {
   return request({
     url: '/api/orderManagementAction.do?method=udpDdztReiect',

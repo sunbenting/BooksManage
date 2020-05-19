@@ -75,9 +75,15 @@
             <el-table-column label="批次编号" min-width="100">
               <template slot-scope="scope">{{ scope.row.batchNumber }}</template>
             </el-table-column>
-            <el-table-column prop="batchName" label="批次名称" width="130"></el-table-column>
+            <el-table-column prop="batchName" label="批次名称" width="130" show-overflow-tooltip></el-table-column>
             <el-table-column label="批次状态" min-width="120">
-              <template slot-scope="scope">{{ scope.row.batchStatus==0?'草稿':'已发布' }}</template>
+              <template slot-scope="scope">
+                <el-tag
+                  style="border:none;background: border-box;"
+                  :type="scope.row.batchStatus==0?'danger':'success'"
+                  effect="plain"
+                >{{ scope.row.batchStatus==0?'草稿':'已发布' }}</el-tag>
+              </template>
             </el-table-column>
             <!-- <el-table-column prop="publishTime" label="发布时间" min-width="120"></el-table-column> -->
             <el-table-column prop="entryTime" label="生效时间" min-width="120"></el-table-column>
@@ -322,10 +328,20 @@ export default {
       } else if (this.multipleSelection.length == 0) {
         this.$message.error("请在选择一条数据后修改");
       } else if (this.multipleSelection.length == 1) {
-        this.dialogFormVisible = true;
-        this.upper = true;
-        this.tableForm = this.multipleSelection[0];
-        this.rowInfo({ ID: this.multipleSelection[0].ID });
+        let nouper = false;
+        this.multipleSelection.map(item => {
+          if (item.batchStatus == 1) {
+            nouper = true;
+          }
+        });
+        if (nouper == false) {
+          this.dialogFormVisible = true;
+          this.upper = true;
+          this.tableForm = this.multipleSelection[0];
+          this.rowInfo({ ID: this.multipleSelection[0].ID });
+        } else {
+          this.$message.error("已发布的批次无法修改，若要修改请先修改批次状态");
+        }
       }
     },
     async rowInfo(id) {
@@ -341,6 +357,8 @@ export default {
         if (item[0] == "KSSJ" || item[0] == "JSSJ") {
           item[1] = `${item[1]}:${item[2]}:${item[3]}`;
         }
+
+        item[1] = item[1].replace(/"/g, "");
         Object.defineProperty(obj, item[0], {
           value: item[1],
           enumerable: true,
@@ -361,20 +379,19 @@ export default {
         })
           .then(() => {
             let nodelete = false;
+            let objIds = [];
             this.multipleSelection.map(item => {
+              objIds.push(item.ID);
               if (item.batchStatus == 1) {
                 nodelete = true;
-                this.$message.error(
-                  "已发布的批次无法删除，若要删除请先修改批次状态"
-                );
               }
             });
             if (nodelete == false) {
-              let objIds = [];
-              this.multipleSelection.map(item => {
-                objIds.push(item.ID);
-              });
               this.deleteItem(objIds);
+            } else {
+              this.$message.error(
+                "已发布的批次无法删除，若要删除请先修改批次状态"
+              );
             }
           })
           .catch(() => {
@@ -445,12 +462,10 @@ export default {
             let currentIndex = this.tableData.indexOf(
               this.multipleSelection[0]
             );
-        
-            this.rowContent.ID=ID;
-            this.rowContent.KSSJ=t1;
-            this.rowContent.JSSJ=t2;
-            this.rowContent.PCMC=batchName;
-         
+            this.rowContent.ID = ID;
+            this.rowContent.KSSJ = t1;
+            this.rowContent.JSSJ = t2;
+            this.rowContent.PCMC = batchName;
             this.updateItem(this.rowContent);
           } else {
             //新增

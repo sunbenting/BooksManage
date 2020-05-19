@@ -72,13 +72,11 @@
             <el-table-column label="图书编号" min-width="100">
               <template slot-scope="scope">{{ scope.row.bookNumber }}</template>
             </el-table-column>
-            <el-table-column prop="bookName" label="图书名称" width="130"></el-table-column>
+            <el-table-column prop="bookName" label="图书名称" width="130" show-overflow-tooltip></el-table-column>
             <el-table-column prop="author" label="图书作者" min-width="120"></el-table-column>
             <el-table-column prop="press" label="图书出版社" min-width="120"></el-table-column>
             <el-table-column label="图书类别" min-width="120">
-              <template
-                slot-scope="scope"
-              >{{ scope.row.bookCategory==1?'中文':scope.row.bookCategory==2?'英文':'儿童' }}</template>
+              <template slot-scope="scope">{{ scope.row.bookCategory }}</template>
             </el-table-column>
             <el-table-column prop="publishTime" label="图书上架时间" min-width="120"></el-table-column>
           </el-table>
@@ -100,7 +98,7 @@
     </el-card>
     <el-dialog :title="upper==false?'新增':'修改'" :visible.sync="dialogFormVisible" width="40%">
       <el-form :model="bookTableForm" :rules="bookRules" ref="bookTableForm">
-        <el-form-item label="图书名称" :label-width="formLabelWidth" prop="bookName">
+        <el-form-item label="图书名称:" :label-width="formLabelWidth" prop="bookName">
           <el-input
             v-model.trim="bookTableForm.bookName"
             placeholder="请填写图书名称"
@@ -108,7 +106,7 @@
             size="small"
           ></el-input>
         </el-form-item>
-        <el-form-item label="图书作者" :label-width="formLabelWidth" prop="author">
+        <el-form-item label="图书作者:" :label-width="formLabelWidth" prop="author">
           <el-input
             v-model.trim="bookTableForm.author"
             placeholder="请填写图书作者"
@@ -116,7 +114,7 @@
             size="small"
           ></el-input>
         </el-form-item>
-        <el-form-item label="图书出版社" :label-width="formLabelWidth" prop="press">
+        <el-form-item label="图书出版社:" :label-width="formLabelWidth" prop="press">
           <el-input
             v-model.trim="bookTableForm.press"
             placeholder="请填写图书出版社"
@@ -127,28 +125,27 @@
         <el-form-item label="图书类别:" :label-width="formLabelWidth" prop="bookCategory">
           <el-select v-model="bookTableForm.bookCategory" placeholder="请选择图书类别" size="small">
             <el-option
-              v-for="item in options1"
+              v-for="item in optionAdd"
               :key="item.value"
               :label="item.label"
               :value="item.value"
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label :label-width="formLabelWidth">
+        <el-form-item label="图书封面:" :label-width="formLabelWidth" prop="bookImageUrl" ref="bookimg">
           <el-upload
-            class="upload-demo"
+          v-model="bookTableForm.bookImageUrl"
+            class="avatar-uploader"
             action="https://jsonplaceholder.typicode.com/posts/"
-            :on-preview="handlePreview"
-            :on-remove="handleRemove"
-            :before-remove="beforeRemove"
-            multiple
-            :limit="1"
-            :on-exceed="handleExceed"
-            :file-list="fileList"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload"
+            accept="image/jpeg,image/jpg,image/png"
           >
-            <el-button size="small" type="primary">上传图片压缩包文件</el-button>
-            <div slot="tip" class="el-upload__tip">只能上传zip/rar文件</div>
+            <img v-if="bookTableForm.bookImageUrl" :src="bookTableForm.bookImageUrl" class="avatar" />
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
+          <div class="el-upload__tip">请上传png、jpg及jpeg格式图片(大小2M以下,建议分辨率256*256)</div>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -156,9 +153,42 @@
         <el-button type="primary" @click="sure('bookTableForm')">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 导入 -->
+    <el-dialog
+  title="提示"
+  :visible.sync="dialogVisible"
+  width="40%"
+  >
+ <el-row type="flex" justify="space-around">
+   <el-col :span="6"><el-button type="primary" @click="downloadtp" icon="el-icon-download">下载模板</el-button>
+    </el-col>
+   <el-col :span="6">
+       <!--limit:最大上传数，on-exceed：超过最大上传数量时的操作  -->
+    <el-upload
+        class="upload-demo"
+        action=""
+        :on-change="handleChange"
+        :on-remove="handleRemove"
+        :on-exceed="handleExceed"
+        :limit="limitUpload"
+        accept=".xlsx,application/vnd.openxmlformats-    
+        officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+        :auto-upload="false">
+   <el-button type="success" @click="upfile" icon="el-icon-upload">上传文件</el-button>   
+    </el-upload>
+   </el-col>
+ </el-row>
+ 
+  <span slot="footer" class="dialog-footer">
+    <el-button @click="dialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+  </span>
+</el-dialog>
   </div>
 </template>
 <script>
+    import FileSaver from 'file-saver'
+    import XLSX from 'xlsx'
 import {
   getBatchTab,
   getSjlb,
@@ -172,7 +202,9 @@ import { Col } from "element-ui";
 export default {
   data() {
     return {
-      fileList:[],
+      limitUpload:1,
+      dialogVisible:false,
+      fileList: [],
       tablist: [],
       bookRules: {
         bookName: [
@@ -186,37 +218,11 @@ export default {
         ],
         bookCategory: [
           { required: true, message: "请选择图书类别", trigger: "change" }
-        ]
+        ],
+        bookImageUrl:[{required: true,message: "请选择图书封面", trigger: "change" }]
       },
-
-      options: [
-        {
-          value: 1,
-          label: "中文"
-        },
-        {
-          value: 2,
-          label: "英文"
-        },
-        {
-          value: 3,
-          label: "儿童"
-        }
-      ],
-      options1: [
-        {
-          value: 1,
-          label: "中文"
-        },
-        {
-          value: 2,
-          label: "英文"
-        },
-        {
-          value: 3,
-          label: "儿童"
-        }
-      ],
+      options: [],
+      optionAdd: [],
       activeName: "",
       total: 0,
       formLabelWidth: "120px",
@@ -230,7 +236,8 @@ export default {
         bookName: "", //图书名称
         press: "", //图书出版社
         author: "", //图书作者
-        bookCategory: "" //图书类别
+        bookCategory: "", //图书类别
+        bookImageUrl:"",//上传图书封面图
       },
       bookTableData: [],
       currentIndex: 4,
@@ -241,8 +248,11 @@ export default {
         start: 0,
         PCID: this.activeName,
         SJMC: "",
-        SJLB: null
-      }
+        LBID: null
+      },
+      outlist:[],//导出数据列表
+      inputList:[],// 导入数据
+      inputListLen:0// 导入数据长度
     };
   },
   watch: {
@@ -260,6 +270,22 @@ export default {
     init() {
       this.getBooksList();
     },
+    downloadtp(){
+  
+      　require.ensure([], () => {
+　　　　　　　　const { export_json_to_excel } = require('../../vendor/Export2Excel');
+　　　　　　　　const tHeader = ['图书编号', '图书名称', '图书作者', '图书出版社', '图书类别','图书上架时间']; //对应表格输出的title
+　　　　　　　　const filterVal = ['bookNumber', 'bookName', 'author', 'press', 'bookCategory','publishTime']; // 对应表格输出的数据
+　　　　　　　　const list = this.outlist;
+              console.log('this.bll :>> ', this.outlist);
+　　　　　　　　const data = this.formatJson(filterVal, list);
+　　　　　　　　export_json_to_excel(tHeader, data, '图书列表excel'); //对应下载文件的名字
+　　　　　　})
+    },
+    formatJson(filterVal, jsonData) {
+　　　　　　return jsonData.map(v => filterVal.map(j => v[j]))
+　　　　},
+    upfile(){},
     async initTab() {
       const res = await getBatchTab();
       const { list } = this.initRes(res);
@@ -269,19 +295,18 @@ export default {
       this.getBooksList();
       this.getBooksCategary();
     },
-    async getBooksCategary(){
-      const res=await getSjlb();
-      const {list}=this.initRes(res);
-    let op= list.map(item=>{
-        let obj={
-          label:item.LBMC,
-          value:item.LBID
-        }
-       return obj;
-      })
-      this.options=op;
-      console.log('op :>> ', op);
-      console.log('list :>> ', list);
+    async getBooksCategary() {
+      const res = await getSjlb();
+      const { list } = this.initRes(res);
+      let op = list.map(item => {
+        let obj = {
+          label: item.LBMC,
+          value: item.LBID
+        };
+        return obj;
+      });
+      this.options = op;
+      this.optionAdd = op;
     },
     initRes(res) {
       const a = res.slice(res.indexOf("rows"), -1); //从开始截取到倒数第二个字符串
@@ -300,13 +325,25 @@ export default {
           SJID: item.SJID,
           bookNumber: item.SJBH || "暂无数据",
           bookName: item.SJMC,
-          bookCategory: Number(item.SJLB),
+          bookCategory: item.LBMC,
           publishTime: item.CJSJ || "暂无数据",
           press: item.SJCBS,
           author: item.SJZZ
         };
         return obj;
       });
+           let arr2 = list.map(item => {
+        let obj = {    
+          bookNumber: item.SJBH || "暂无数据",
+          bookName: item.SJMC,
+          bookCategory: item.LBMC,
+          publishTime: item.CJSJ || "暂无数据",
+          press: item.SJCBS,
+          author: item.SJZZ
+        };
+        return obj;
+      });
+      this.outlist=arr2;
       this.bookTableData = arr;
       this.total = Number(total);
     },
@@ -317,14 +354,112 @@ export default {
     },
     //导入表格
     exportExcel() {
+      this.dialogVisible=true;
       console.log("表格 :>> ");
     },
+            //上传文件时处理方法  
+        handleChange(file, fileList){
+            this.fileTemp = file.raw;
+            if(this.fileTemp){
+                if((this.fileTemp.type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') 
+                    || (this.fileTemp.type == 'application/vnd.ms-excel')){
+                    this.importfxx(this.fileTemp);
+                } else {
+                    this.$message({
+                        type:'warning',
+                        message:'附件格式错误，请删除后重新上传！'
+                    })
+                }
+            } else {
+                this.$message({
+                    type:'warning',
+                    message:'请上传附件！'
+                })
+            }
+        },
+        //超出最大上传文件数量时的处理方法
+        handleExceed(){
+            this.$message({
+                type:'warning',
+                message:'超出最大上传文件数量的限制！'
+            })
+            return;
+        },
+        //移除文件的操作方法
+        handleRemove(file,fileList){
+            this.fileTemp = null
+        },
+                 importfxx(obj) {
+            let _this = this;
+            let inputDOM = this.$refs.inputer;
+            // 通过DOM取文件数据
+ 
+            this.file = event.currentTarget.files[0];
+ 
+            var rABS = false; //是否将文件读取为二进制字符串
+            var f = this.file;
+ 
+            var reader = new FileReader();
+            //if (!FileReader.prototype.readAsBinaryString) {
+            FileReader.prototype.readAsBinaryString = function(f) {
+                var binary = "";
+                var rABS = false; //是否将文件读取为二进制字符串
+                var pt = this;
+                var wb; //读取完成的数据
+                var outdata;
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var bytes = new Uint8Array(reader.result);
+                    var length = bytes.byteLength;
+                    for (var i = 0; i < length; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    //此处引入，用于解析excel
+                    var XLSX = require("xlsx");
+                    if (rABS) {
+                        wb = XLSX.read(btoa(fixdata(binary)), {
+                        //手动转化
+                        type: "base64"
+                        });
+                    } else {
+                        wb = XLSX.read(binary, {
+                        type: "binary"
+                        });
+                    }
+                    outdata = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); 
+                    console.log('outdata :>> ', outdata);
+                    //outdata就是读取的数据（不包含标题行即表头，表头会作为对象的下标）
+                    //此处可对数据进行处理
+                    let arr = [];
+                    outdata.map(v => {
+                        let obj = {};
+                        obj.bookNumber = v['图书编号'];
+                        obj.bookName = v['图书名称'];
+                        obj.author = v['图书作者'];
+                        obj.press = v['图书出版社'];
+                        obj.bookCategory = v['图书类别'];
+                          obj.publishTime = v['图书上架时间']
+                        arr.push(obj);
+                    });
+                    _this.inputList=arr;
+                    _this.inputListLen=arr.length;
+                    console.log('arr :>> ', arr);
+                    return arr;
+                };
+                reader.readAsArrayBuffer(f);
+            };
+            if (rABS) {
+                reader.readAsArrayBuffer(f);
+            } else {
+                reader.readAsBinaryString(f);
+            }
+        },
     //查询
     search() {
       let obj = this.invalidProperty(this.bookSearchForm);
       const { bookName, bookCategory } = this.bookSearchForm;
       this.requestParams.SJMC = bookName;
-      this.requestParams.SJLB = bookCategory;
+      this.requestParams.LBID = bookCategory;
       this.init();
     },
     clear() {
@@ -348,23 +483,27 @@ export default {
       }
       return b;
     },
+    //勾选
     handleSelectionChange(val) {
       this.multipleSelection = val;
       console.log("multipleSelection ", this.multipleSelection);
     },
     //上传图片压缩包
-      handleRemove(file, fileList) {
-        console.log(file, fileList);
-      },
-      handlePreview(file) {
-        console.log(file);
-      },
-      handleExceed(files, fileList) {
-        this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
-      },
-      beforeRemove(file, fileList) {
-        return this.$confirm(`确定移除 ${ file.name }？`);
-      },
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+
+    handleAvatarSuccess(res, file) {
+      this.bookTableForm.bookImageUrl = URL.createObjectURL(file.raw);
+      this.$refs.bookimg.clearValidate();
+    },
+    beforeAvatarUpload(file) {
+      const isLt2M = file.size / 1024 / 1024 < 2;
+      if (!isLt2M) {
+        this.$message.error("上传封面图片大小不能超过 2MB!");
+      }
+      return isLt2M;
+    },
     // 表头样式设置
     headClass() {
       return "text-align: center;background:#f7f7f7;";
@@ -375,10 +514,13 @@ export default {
     },
     //page事件
     handleSizeChange(val) {
-      console.log(`每页 ${val} 条`);
+      this.requestParams.limit = val;
+      this.init();
     },
     handleCurrentChange(val) {
-      console.log(`当前页: ${val}`);
+       this.currentPage=val;
+      this.requestParams.start = (val - 1) * this.requestParams.limit;
+      this.init();
     },
     //新增
     addRow() {
@@ -441,7 +583,6 @@ export default {
             author,
             bookName,
             press,
-            publishTime,
             bookNumber,
             bookCategory
           } = this.bookTableForm;
@@ -457,7 +598,7 @@ export default {
               author,
               bookName,
               press,
-              publishTime: this.initTime(publishTime),
+
               bookNumber,
               bookCategory
             };
@@ -506,5 +647,28 @@ export default {
 .bookManagement {
   padding: 10px;
   background: #f2f2f2;
+  .avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409eff;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 120px;
+    height: 120px;
+    line-height: 120px;
+    text-align: center;
+  }
+  .avatar {
+    width: 120px;
+    height: 120px;
+    display: block;
+  }
 }
 </style>
