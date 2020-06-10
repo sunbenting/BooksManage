@@ -61,13 +61,18 @@
     <el-card class="box-card" style="margin-top:10px">
       <el-row>
         <el-col :span="2" style="margin-right:20px">
-          <el-button type="primary" icon="el-icon-check" size="small" @click="publish">审核通过</el-button>
+          <el-button type="primary" icon="el-icon-check" size="small" @click="publish">通过</el-button>
         </el-col>
         <el-col :span="2" style="margin-right:20px">
-          <el-button type="primary" icon="el-icon-refresh-left" size="small" @click="withdraw">审核驳回</el-button>
+          <el-button type="primary" icon="el-icon-refresh-left" size="small" @click="withdraw">撤回</el-button>
         </el-col>
         <el-col :span="2">
-          <el-button type="primary" icon="el-icon-star-off" size="small" @click="selectedReviews">设置精选评论</el-button>
+          <el-button
+            type="primary"
+            icon="el-icon-star-off"
+            size="small"
+            @click="selectedReviews"
+          >设置精选评论</el-button>
         </el-col>
       </el-row>
       <el-row>
@@ -83,8 +88,10 @@
             @selection-change="handleSelectionChange"
           >
             <el-table-column type="selection" width="55"></el-table-column>
-            <el-table-column prop="bookName" label="图书名称" min-width="120" show-overflow-tooltip></el-table-column>
-            <el-table-column prop="comments" label="评论内容" min-width="120" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="bookName" label="图书名称" min-width="220" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="comments" label="评论内容" min-width="220" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="commentTime" label="评论时间" min-width="160"></el-table-column>
+            <el-table-column prop="commentator" label="评论人" min-width="120"></el-table-column>
             <el-table-column prop="commentType" label="评论类型" min-width="120">
               <template slot-scope="scope">
                 <el-tag
@@ -94,18 +101,15 @@
                 >{{ scope.row.commentType==0?'普通评论':'精选评论' }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="评论状态" min-width="120">
-              <template slot-scope="scope" >
+            <el-table-column label="评论状态" min-width="100">
+              <template slot-scope="scope">
                 <el-tag
                   style="border:none;background: border-box;"
                   :type="scope.row.commentStatus==0?'':scope.row.commentStatus==1?'success':'danger'"
                   effect="plain"
-                >{{ scope.row.commentStatus==0?'待审核':scope.row.commentStatus==1?'通过':'驳回'}}</el-tag>
+                >{{ scope.row.commentStatus==0?'待审核':scope.row.commentStatus==1?'通过':'撤回'}}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="commentTime" label="评论时间" min-width="130"></el-table-column>
-            <el-table-column prop="commentator" label="评论人" min-width="120"></el-table-column>
-            <el-table-column prop="reviewer" label="审核人" min-width="120"></el-table-column>
           </el-table>
         </el-col>
       </el-row>
@@ -179,8 +183,8 @@ export default {
       this.getCommentLists();
     },
     async getCommentLists() {
-      const paramsobj = this.invalidProperty(this.requestParams);
-      let res = await commentList(paramsobj);
+      // const paramsobj = this.invalidProperty(this.requestParams);
+      let res = await commentList(this.requestParams);
       const { list, total } = this.initRes(res);
       let arr = list.map(item => {
         let obj = {
@@ -208,22 +212,21 @@ export default {
     //查询
     search() {
       console.log(this.reviewsSearchForm);
-      let obj = this.invalidProperty(this.reviewsSearchForm);
-       const { bookName, commentStatus, commentType } = this.reviewsSearchForm;
+      const { bookName, commentStatus, commentType } = this.reviewsSearchForm;
       this.requestParams.SJMC = bookName;
       this.requestParams.PLLX = commentType;
-      this.requestParams.PCZT = commentStatus;
+      this.requestParams.PLZT = commentStatus;
       this.init();
     },
     clear() {
       this.reviewsSearchForm = {};
-       this.requestParams= {
+      this.requestParams = {
         limit: 10,
         start: 0,
         PLZT: null,
         PLLX: null,
         SJMC: ""
-      }
+      };
       this.init();
     },
     invalidProperty(obj) {
@@ -250,12 +253,12 @@ export default {
     //page事件
     handleSizeChange(val) {
       this.requestParams.limit = val;
-       console.log('size :>> ', val);
+      console.log("size :>> ", val);
       this.init();
     },
     handleCurrentChange(val) {
-      console.log('page :>> ', val);
-      this.currentPage=val;
+      console.log("page :>> ", val);
+      this.currentPage = val;
       this.requestParams.start = (val - 1) * this.requestParams.limit;
       this.init();
     },
@@ -278,9 +281,9 @@ export default {
     async reviewsReject(ids) {
       const res = await commentReject(ids);
       this.init();
-      this.$message.success("审核驳回");
+      this.$message.success("撤回成功");
     },
-       async selec(ids) {
+    async selec(ids) {
       const res = await selectedComment(ids);
       this.init();
       this.$message.success("设置成功");
@@ -289,33 +292,25 @@ export default {
     withdraw() {
       if (this.multipleSelection.length > 0) {
         let objIds = [];
-        let nodePass=false;
+
         this.multipleSelection.map(item => {
           objIds.push(item.PLID);
-          if (item.commentStatus == 1) {
-            nodePass = true;
-          }
         });
-        if (nodePass == false) {
-        
-          this.reviewsReject(objIds);
-        } else {
-          this.$message.error("审核通过的评论无法驳回");
-        }
+        this.reviewsReject(objIds);
       }
     },
     //设置精选评论
     selectedReviews() {
       if (this.multipleSelection.length > 0) {
         let objIds = [];
-        let nodePass=false;
+        let nodePass = false;
         this.multipleSelection.map(item => {
           objIds.push(item.PLID);
           if (item.commentStatus == 1) {
             nodePass = true;
           }
         });
-        if (nodePass == true) {    
+        if (nodePass == true) {
           this.selec(objIds);
         } else {
           this.$message.error("审核未通过的评论无法设置为精选评论");

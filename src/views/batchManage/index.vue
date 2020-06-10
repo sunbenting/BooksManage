@@ -116,14 +116,7 @@
             size="small"
           ></el-input>
         </el-form-item>
-        <!-- <el-form-item label="发布时间" :label-width="formLabelWidth" prop="publishTime">
-          <el-date-picker
-            v-model="tableForm.publishTime"
-            type="date"
-            placeholder="选择发布时间"
-            size="small"
-          ></el-date-picker>
-        </el-form-item>-->
+      
         <el-form-item label="生效时间" :label-width="formLabelWidth" prop="entryTime">
           <el-date-picker
             v-model="tableForm.entryTime"
@@ -148,9 +141,9 @@
             size="small"
           ></el-date-picker>
         </el-form-item>
-        <el-form-item label="发布人" :label-width="formLabelWidth" prop="author" v-if="upper==false">
+        <!-- <el-form-item label="发布人" :label-width="formLabelWidth" prop="author" v-if="upper==false">
           <el-input v-model="tableForm.author" autocomplete="off" size="small"></el-input>
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cacle('batchForm')">取 消</el-button>

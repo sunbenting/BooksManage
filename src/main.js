@@ -10,7 +10,8 @@ import 'element-ui/lib/theme-chalk/index.css'
 import locale from 'element-ui/lib/locale/lang/en' // lang i18n
 
 import '@/styles/index.scss' // global css
-
+import axios from 'axios'
+Vue.prototype.$axios=axios;
 import App from './App'
 import store from './store'
 import router from './router'

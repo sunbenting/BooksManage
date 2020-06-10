@@ -26,7 +26,7 @@ module.exports = {
    */
   publicPath: '/',
   outputDir: 'dist',
-  assetsDir: 'static',
+  assetsDir: 'union-web/bookClub/admin',
   lintOnSave: process.env.NODE_ENV === 'development',
   productionSourceMap: false,
   devServer: {
@@ -37,9 +37,13 @@ module.exports = {
       errors: true
     },
     // before: require('./mock/mock-server.js'),
+    //田 http://172.20.10.2:7012/union-web
+    //赵http://192.168.43.109:7012/union-web
+    //赵http://172.20.10.4:7012/union-web
+
     proxy:{
       '/api': {
-        target: 'http://192.168.43.18:7012/union-web',
+        target: 'http://192.168.43.109:7012/union-web',
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''

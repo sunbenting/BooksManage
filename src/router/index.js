@@ -51,10 +51,10 @@ export const constantRoutes = [
   {
     path: '/',
     component: Layout,
-    redirect: '/batchManage',
+    // redirect: '/union-web',
     children: [{
-      path: 'batchManage',
-      name: 'batchManage',
+      path: '/',
+      name: '/',
       component: () => import('@/views/batchManage/index'),
       meta: { title: '批次管理', icon: 'dashboard' },
       noCache: true
@@ -112,13 +112,31 @@ export const constantRoutes = [
     ]
    
   },
+  //系统管理
+  {
+    path: '/systemManage',
+    component: Layout,
+    redirect: '/systemManage',   
+    children: [
+      {
+        path: '/systemManage',
+        name: 'systemManage',
+        meta: {
+          title: '系统管理',
+          icon: 'system'
+        },
+        component: () => import('@/views/systemManage/index')
+      }
+    ]
+   
+  },
 
   // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true }
+  { path: '*', redirect: '/', hidden: true }
 ]
 
 const createRouter = () => new Router({
-  mode: 'history', // require service support
+  mode: 'hash', // require service support
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes
 })

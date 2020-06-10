@@ -6,19 +6,19 @@
         <p>读书活动后台管理平台</p>
       </div>
       <div class="box-headerRight">
-        <div class="rightbox">
+        <!-- <div class="rightbox">
           <img :src="message" mode class="imgRight" />
           <span class="circle">36</span>
           <span class="shu">|</span>
-        </div>
+        </div> -->
         <div class="rightbox">
           <img :src="user" mode class="imgRight" />
           <span>系统管理员</span>
-          <span class="shu">|</span>
+          <!-- <span class="shu">|</span> -->
         </div>
-        <div class="rightbox">
+        <!-- <div class="rightbox">
           <img :src="out" mode class="imgRight"  @click="logout"/>
-        </div>
+        </div> -->
       </div>
     </div>
     <!-- :class="classObj" -->

@@ -45,21 +45,21 @@
     </el-card>
     <el-card class="box-card" style="margin-top:10px">
       <el-row>
-        <el-col :span="2" style="margin-right:20px">
+        <!-- <el-col :span="2" style="margin-right:20px">
           <el-button type="primary" icon="el-icon-check" size="small" @click="publish">审核通过</el-button>
-        </el-col>
+        </el-col> -->
         <el-col :span="2" style="margin-right:20px">
-          <el-button type="primary" icon="el-icon-refresh-left" size="small" @click="withdraw">审核驳回</el-button>
+          <el-button type="primary" icon="el-icon-refresh-left" size="small" @click="withdraw">驳回</el-button>
         </el-col>
         <el-col :span="2" style="margin-right:20px">
           <download-excel
             class="export-excel-wrapper"
             :data="json_data"
             :fields="json_fields"
-            name="已审核订单导出数据.xls"
+            :name="orderName"
           >
             <!-- 上面可以自定义自己的样式，还可以引用其他组件button -->
-            <el-button type="primary" size="small" icon="el-icon-download">导出已审核订单</el-button>
+            <el-button type="primary" size="small" icon="el-icon-download">导出订单</el-button>
           </download-excel>
           <!-- <el-button type="primary" icon="el-icon-download" size="small" @click="outPass">导出已审核订单</el-button> -->
         </el-col>
@@ -72,29 +72,30 @@
             tooltip-effect="dark"
             style="width: 100%;margin-top:15px;"
             :stripe="true"
-            :cell-style="rowClass"
             :header-cell-style="headClass"
             @selection-change="handleSelectionChange"
           >
             <el-table-column type="selection" width="55"></el-table-column>
-            <el-table-column label="订单编号" min-width="100">
-              <template slot-scope="scope">{{ scope.row.orderNumber }}</template>
+            <el-table-column align="center" label="订单编号" min-width="220">
+            <template slot-scope="scope">{{ scope.row.orderNumber }}</template>
             </el-table-column>
+              <el-table-column align="left" prop="ORG_NAME" label="部门" min-width="220"></el-table-column>
+              <el-table-column align="center" prop="ISBN" label="ISBN" min-width="180"></el-table-column>
             <!-- <el-table-column prop="reviewsName" label="批次名称" width="130"></el-table-column> -->
-            <el-table-column prop="bookName" label="图书名称" min-width="120"></el-table-column>
-            <el-table-column prop="bookNumber" label="订单数量" min-width="100"></el-table-column>
-            <el-table-column prop="submitter" label="提交人" min-width="120"></el-table-column>
-            <el-table-column prop="submitTime" label="提交日期" min-width="130"></el-table-column>
-            <el-table-column label="审核状态" min-width="120">
+            <el-table-column align="center" prop="bookName" label="图书名称" min-width="220" show-overflow-tooltip></el-table-column>
+           <el-table-column align="center" prop="bookNumber" label="订单数量" min-width="80"></el-table-column>
+            <el-table-column align="center" prop="submitter" label="提交人" min-width="120"></el-table-column>
+           <el-table-column align="center" prop="submitTime" label="提交日期" min-width="150"></el-table-column>
+            <el-table-column align="center" label="订单状态" min-width="120">
               <template slot-scope="scope">
                 <el-tag
                   style="border:none;background: border-box;"
-                  :type="scope.row.auditStatus==1?'danger':'success'"
+                  :type="scope.row.auditStatus==1?'success':'danger'"
                   effect="plain"
-                >{{ scope.row.auditStatus==1?'待审核':'已审核' }}</el-tag>
+                >{{ scope.row.auditStatus==1?'已提交':'驳回' }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="reviewer" label="审核人" min-width="120"></el-table-column>
+           
           </el-table>
         </el-col>
       </el-row>
@@ -115,21 +116,22 @@
   </div>
 </template>
 <script>
-import { getBatchTab, getOrderList, checkPass, checkReject } from "@/api/order";
+import { getBatchTab, getOrderList, checkPass, checkReject,exportDdList } from "@/api/order";
 import { Col } from "element-ui";
 export default {
   data() {
     return {
       json_fields: {
-        "订单编号": "orderNumber", //常规字段
-        "图书名称": "bookName", //支持嵌套属性
-        "订单数量": "bookNumber",
-        "提交人": "submitter",
-        "提交日期": "submitTime",
-        "审核状态": "auditStatus",
-        "审核人": "reviewer"
+        "订单编号": "DDBH", //常规字段
+        "部门":"ORG_NAME",
+        "ISBN":"ISBN",
+        "图书名称": "SJMC", //支持嵌套属性
+        "订单数量": "DDSL",
+         "提交人": "CJR_NAME",
+        "提交日期": "CJSJ"
       },
       json_data: [],
+      orderName:'',
       json_meta: [
         [
           {
@@ -186,18 +188,45 @@ export default {
   },
   mounted() {
     this.initTab();
+   
   },
   methods: {
     init() {
       this.getOrderLists();
+    },
+        //导出
+    outPass() {},
+    async downdata(){
+      console.log('this.activeName :>> ', this.activeName);
+      const res= await exportDdList({PCID:this.activeName});
+      console.log('res :>> ', res);
+      let arr=[]
+     res.records.map(item=>{
+        let obj={
+          DDBH:item.DDBH,
+          ISBN:item.SJBH,
+          ORG_NAME:item.ORG_NAME,
+          CJR_NAME:item.CJR_NAME,
+          SJMC:item.SJMC,
+          DDSL:item.DDSL,
+          CJSJ:item.CJSJ
+        }
+        arr.push(obj);
+      })
+      this.json_data=arr;
+       console.log('json_data :>> ', arr);
     },
     async initTab() {
       const res = await getBatchTab();
       const { list } = this.initRes(res);
       this.tablist = list;
       this.activeName = list[0].ID;
+      console.log('list :>> ', list);
+      this.orderName=`${list[0].PCMC}采购订单.xls`;
+      console.log('this.orderName :>> ', this.orderName);
       this.requestParams.PCID = this.activeName;
       this.getOrderLists();
+       this.downdata();
     },
     initRes(res) {
       const a = res.slice(res.indexOf("rows"), -1); //从开始截取到倒数第二个字符串
@@ -221,17 +250,13 @@ export default {
           submitter: item.CJR_NAME,
           submitTime: item.CJSJ,
           auditStatus: Number(item.DDZT),
-          reviewer: item.CJR
+          reviewer: item.CJR,
+          ISBN:item.SJBH,
+          ORG_NAME:item.ORG_NAME
         };
         return obj;
       });
       this.tableData = arr;
-     this.json_data=  arr.map(item=>{
-       if(item.auditStatus==2){
-         return item;
-       }
-     })
-     console.log('this.json_data :>> ', this.json_data);
       this.total = Number(total);
     },
     handleClick(tab, event) {
@@ -288,21 +313,22 @@ export default {
       this.init();
     },
 
-    //审核通过
-    publish() {
-      if (this.multipleSelection.length > 0) {
-        let objIds = [];
-        this.multipleSelection.map(item => {
-          objIds.push(item.ID);
-        });
-        this.orderPass(objIds);
-      }
-    },
-    async orderPass(ids) {
-      const res = await checkPass(ids);
-      this.init();
-      this.$message.success("审核通过");
-    },
+    // //审核通过
+    // publish() {
+    //   if (this.multipleSelection.length > 0) {
+    //     let objIds = [];
+    //     this.multipleSelection.map(item => {
+    //       objIds.push(item.ID);
+    //     });
+    //     this.orderPass(objIds);
+    //   }
+    // },
+    // async orderPass(ids) {
+    //   const res = await checkPass(ids);
+    //   this.init();
+    //    this.downdata();
+    //   this.$message.success("审核通过");
+    // },
     //审核驳回
     withdraw() {
       if (this.multipleSelection.length > 0) {
@@ -326,8 +352,7 @@ export default {
       this.init();
       this.$message.success("审核驳回");
     },
-    //导出
-    outPass() {},
+
     cacle(formName) {
       this.$refs[formName].resetFields();
       this.dialogFormVisible = false;
