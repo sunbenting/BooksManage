@@ -50,7 +50,7 @@
       </span>
     </el-dialog>
 
-    <el-card class="box-card">
+    <!-- <el-card class="box-card">
       <div slot="header" class="clearfix">
         <span>轮播管理</span>
         <el-button style="float: right; padding: 3px 0" type="text">修改轮播</el-button>
@@ -58,7 +58,7 @@
       <div class="text item">
         <el-button type="primary">修改轮播</el-button>
       </div>
-    </el-card>
+    </el-card> -->
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <span>图书购选数量管理</span>
@@ -71,7 +71,7 @@
         <el-form :model="orderform" ref="orderform" label-width="163px">
           <el-row>
             <el-col :span="14">
-              <el-form-item label="修改图书最大购选数量">
+              <el-form-item label="图书最大购选数量">
                 <el-input-number
                   v-model.trim="orderform.ordeript"
                   placeholder="填入图书最大购选数量"
