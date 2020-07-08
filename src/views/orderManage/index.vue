@@ -16,10 +16,10 @@
               </el-col>
 
               <el-col :span="9">
-                <el-form-item label="审核状态:">
+                <el-form-item label="订单状态:">
                   <el-select
                     v-model="reviewsSearchForm.auditStatus"
-                    placeholder="请选择审核状态"
+                    placeholder="请选择订单状态"
                     size="small"
                     style="width:230px"
                   >
@@ -145,11 +145,11 @@ export default {
       options: [
         {
           value: 1,
-          label: "待审核"
+          label: "已提交"
         },
         {
           value: 2,
-          label: "已审核"
+          label: "驳回"
         }
       ],
       total: 0,
@@ -343,7 +343,7 @@ export default {
         if (nodePass == false) {
           this.orderReject(objIds);
         } else {
-          this.$message.error("审核通过的订单无法驳回");
+          this.$message.error("请勿重复驳回操作！");
         }
       }
     },

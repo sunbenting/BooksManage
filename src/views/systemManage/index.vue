@@ -151,10 +151,15 @@ export default {
       console.log("obj :>> ", obj);
       const res = await saveSJLB(obj);
       console.log("res :>> ", res);
-      if (res) {
+      if (res.success) {
         this.$message.success("添加成功！");
         this.textform.textipt = "";
         this.getBooksCategary();
+      }else{
+        this.$message({
+          type:'error',
+           message: res.msg,
+        })
       }
     },
     sureLabel() {},
@@ -193,6 +198,7 @@ export default {
         this.LBvisible = false;
         this.$message.success("修改成功！");
         this.LBIDS={};
+        this.lbform.lbipt='';
         this.checkList=[];
         this.getBooksCategary();
       }
@@ -210,7 +216,12 @@ export default {
       let obj = {
         ids: arr
       };
-      this.delCategarys(obj);
+      if(arr.length==0){
+        this.$message.error('请先勾选类别删除')
+      }else{
+        this.delCategarys(obj);
+      }
+      
     },
 
     async delCategarys(obj) {

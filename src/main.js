@@ -19,6 +19,19 @@ import router from './router'
 import '@/icons' // icon
 import '@/permission' // permission control
 
+Vue.prototype.validSe = function (value, number = 25) {
+  value = value.replace(/[`～*~!@#$%^&*()_\-+=<>?:"{}|,./;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；‘’，。、]/g, '').replace(/\s/g, "");
+  if (value.length >= number) {
+  this.$message({
+  type: "warning",
+  message: `输入内容不能超过${number}个字符`
+  });
+  }
+  return value;
+  };
+
+
+
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

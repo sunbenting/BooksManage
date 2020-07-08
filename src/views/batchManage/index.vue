@@ -75,7 +75,7 @@
             <el-table-column label="批次编号" min-width="100">
               <template slot-scope="scope">{{ scope.row.batchNumber }}</template>
             </el-table-column>
-            <el-table-column prop="batchName" label="批次名称" width="130" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="batchName" label="批次名称" width="180" show-overflow-tooltip></el-table-column>
             <el-table-column label="批次状态" min-width="120">
               <template slot-scope="scope">
                 <el-tag
@@ -86,9 +86,9 @@
               </template>
             </el-table-column>
             <!-- <el-table-column prop="publishTime" label="发布时间" min-width="120"></el-table-column> -->
-            <el-table-column prop="entryTime" label="生效时间" min-width="120"></el-table-column>
-            <el-table-column prop="endTime" label="结束时间" min-width="120"></el-table-column>
-            <el-table-column prop="author" label="发布人" min-width="120"></el-table-column>
+            <el-table-column prop="entryTime" label="生效时间" min-width="100"></el-table-column>
+            <el-table-column prop="endTime" label="结束时间" min-width="100"></el-table-column>
+            <el-table-column prop="author" label="发布人" min-width="100"></el-table-column>
           </el-table>
         </el-col>
       </el-row>
@@ -130,7 +130,7 @@
           :label-width="formLabelWidth"
           prop="endTime"
           :rules="[
-            { required: true, message: '请选择生效时间111', trigger: 'change'},      
+            { required: true, message: '请选择结束时间', trigger: 'change'},      
             { validator: validateDate, trigger:'change' }
           ]"
         >
@@ -141,9 +141,7 @@
             size="small"
           ></el-date-picker>
         </el-form-item>
-        <!-- <el-form-item label="发布人" :label-width="formLabelWidth" prop="author" v-if="upper==false">
-          <el-input v-model="tableForm.author" autocomplete="off" size="small"></el-input>
-        </el-form-item> -->
+       
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cacle('batchForm')">取 消</el-button>
@@ -180,7 +178,6 @@ export default {
         batchName: [
           { required: true, message: "请填写批次名称", trigger: "blur" }
         ],
-        author: [{ required: true, message: "请填写发布人", trigger: "blur" }],
         entryTime: [
           { required: true, message: "请选择生效时间", trigger: "change" }
         ]
@@ -217,6 +214,7 @@ export default {
     dialogFormVisible: function(val, oldVa) {
       if (val == false) {
         this.tableForm = {};
+         this.$refs.batchForm.resetFields();
       }
     }
   },
@@ -280,7 +278,7 @@ export default {
       if (value) {
         let end = new Date(value).getTime();
         let start = new Date(this.tableForm.entryTime).getTime();
-        if (end < start) {
+        if (end < start||end==start) {
           callback(new Error("结束时间要大于生效时间"));
         } else {
           callback();
@@ -291,6 +289,7 @@ export default {
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
+      console.log('multipleSelection :>> ', val);
     },
     // 表头样式设置
     headClass() {
@@ -408,7 +407,9 @@ export default {
         this.$message.error("只能选择一条数据进行发布");
       } else if (this.multipleSelection.length == 0) {
         this.$message.error("请在选择一条数据后发布");
-      } else if (this.multipleSelection.length == 1) {
+      } else if(this.multipleSelection&&this.multipleSelection[0].batchStatus==1){
+           this.$message.error("已发布，不能重复发布！");
+      }else if (this.multipleSelection.length == 1&&this.multipleSelection[0].batchStatus!=1) {
         let id = { ID: this.multipleSelection[0].ID };
         this.publishItem(id);
       }
@@ -425,7 +426,9 @@ export default {
         this.$message.error("只能选择一条数据进行撤回");
       } else if (this.multipleSelection.length == 0) {
         this.$message.error("请在选择一条数据后撤回");
-      } else if (this.multipleSelection.length == 1) {
+      } else if(this.multipleSelection&&this.multipleSelection[0].batchStatus==0){
+           this.$message.error("已撤回，不能重复撤回！");
+      } else if (this.multipleSelection.length == 1&&this.multipleSelection[0].batchStatus!=0) {
         let id = { ID: this.multipleSelection[0].ID };
         this.RecallItem(id);
       }

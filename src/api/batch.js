@@ -43,7 +43,7 @@ const  getBatchInfo=(params)=> {
   //批次列表删除条
   const  deleteBatch=(data)=> {
     return request({
-      url: '/union-web/batchManagementAction.do?method=delBatchInfos',
+      url: '/union-web/tsglAction.do?method=delBatchInfos',
       method: 'get',
       params:{objIds:data},
       paramsSerializer: params => {
@@ -115,7 +115,7 @@ const  batchPublish=(params)=> {
 //   //批次列表删除条
 //   const  deleteBatch=(data)=> {
 //     return request({
-//       url: '/api/batchManagementAction.do?method=delBatchInfos',
+//       url: '/api/tsglAction.do?method=delBatchInfos',
 //       method: 'get',
 //       params:{objIds:data},
 //       paramsSerializer: params => {

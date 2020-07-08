@@ -4,8 +4,17 @@
       <el-tabs v-model="activeName" @tab-click="handleClick" type="card">
         <el-tab-pane :label="item.PCMC" :name="item.ID" v-for="(item) in tablist" :key="item.ID">
           <el-form ref="form" :model="bookSearchForm" label-width="80px">
-            <el-row>
-              <el-col :span="8">
+            <el-row type="flex" justify="space-between">
+                 <el-col :span="7">
+                <el-form-item label="ISBN:">
+                  <el-input
+                    v-model.trim="bookSearchForm.bookNumber"
+                    size="small"
+                    placeholder="请输入ISBN"
+                  ></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="7">
                 <el-form-item label="图书名称:">
                   <el-input
                     v-model.trim="bookSearchForm.bookName"
@@ -14,7 +23,7 @@
                   ></el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="9" :offset="1">
+              <el-col :span="7" >
                 <el-form-item label="图书类别:">
                   <el-select
                     v-model="bookSearchForm.bookCategory"
@@ -30,10 +39,12 @@
                   </el-select>
                 </el-form-item>
               </el-col>
+            </el-row>
+            <el-row type="flex" justify="end">
               <el-col :span="1" :offset="2">
                 <el-button type="primary" @click="search" size="small">查询</el-button>
               </el-col>
-              <el-col :span="2" :offset="1">
+              <el-col :span="1" style="margin: 0 22px;">
                 <el-button type="primary" @click="clear" size="small">重置</el-button>
               </el-col>
             </el-row>
@@ -58,6 +69,9 @@
         <el-col :span="4">
           <el-button type="primary" icon="el-icon-upload2" size="small" @click="exportImgs">批量上传封面</el-button>
         </el-col>
+        <!-- <el-col :span="4">
+          <el-button type="primary" icon="el-icon-upload2" size="small" @click="uplodadImg(rowyy)">上传单一封面</el-button>
+        </el-col>-->
       </el-row>
       <el-row>
         <el-col :span="24">
@@ -101,13 +115,13 @@
             <el-table-column align="center" label="图书小类" min-width="100" show-overflow-tooltip>
               <template slot-scope="scope">{{ scope.row.LBXQ }}</template>
             </el-table-column>
-            <el-table-column
+            <!-- <el-table-column
               prop="publishTime"
               label="图书上架时间"
               min-width="180"
               show-overflow-tooltip
               align="center"
-            ></el-table-column>
+            ></el-table-column>-->
 
             <el-table-column fixed="right" label="操作" width="130">
               <template slot-scope="scope">
@@ -130,7 +144,7 @@
             @current-change="handleCurrentChange"
             :current-page="currentPage"
             :page-sizes="[10, 15, 20, 30]"
-            :page-size="100"
+            :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             :total="total"
           ></el-pagination>
@@ -147,6 +161,9 @@
                 placeholder="请填写ISBN"
                 autocomplete="off"
                 size="small"
+                maxlength="20"
+                @keyup.native="btKeyUp"
+                :disabled="upper==true?true:false"
               ></el-input>
             </el-form-item>
           </el-col>
@@ -157,6 +174,8 @@
                 placeholder="请填写图书名称"
                 autocomplete="off"
                 size="small"
+                maxlength="20"
+                @keyup.native="btKeyUp"
               ></el-input>
             </el-form-item>
           </el-col>
@@ -170,6 +189,8 @@
                 placeholder="请填写作者"
                 autocomplete="off"
                 size="small"
+                maxlength="20"
+                @keyup.native="btKeyUp"
               ></el-input>
             </el-form-item>
           </el-col>
@@ -180,6 +201,8 @@
                 placeholder="请填写出版社"
                 autocomplete="off"
                 size="small"
+                maxlength="20"
+                @keyup.native="btKeyUp"
               ></el-input>
             </el-form-item>
           </el-col>
@@ -188,10 +211,15 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="图书大类:" :label-width="formLabelWidth" prop="bookCategory">
-              <el-select v-model="bookTableForm.bookCategory" placeholder="请选择图书类别" size="small">
+              <el-select
+                v-model="bookTableForm.bookCategory"
+                placeholder="请选择图书类别"
+                size="small"
+                @change="selechangehad"
+              >
                 <el-option
                   v-for="item in optionAdd"
-                  :key="item.value"
+                  :key="item.label"
                   :label="item.label"
                   :value="item.value"
                 ></el-option>
@@ -200,7 +228,12 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="图书小类:" :label-width="formLabelWidth" prop="LBXQ">
-              <el-input v-model.trim="bookTableForm.LBXQ" placeholder="请填写图书小类"></el-input>
+              <el-input
+                v-model.trim="bookTableForm.LBXQ"
+                placeholder="请填写图书小类"
+                maxlength="20"
+                @keyup.native="btKeyUp"
+              ></el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -213,6 +246,8 @@
                 placeholder="请填写作者简介"
                 autocomplete="off"
                 size="medium"
+                maxlength="20"
+                @keyup.native="btKeyUp"
               ></el-input>
             </el-form-item>
           </el-col>
@@ -225,6 +260,8 @@
                 v-model.trim="bookTableForm.NRJJ"
                 placeholder="请填写内容简介"
                 size="medium"
+                maxlength="20"
+                @keyup.native="btKeyUp"
               ></el-input>
             </el-form-item>
           </el-col>
@@ -257,44 +294,29 @@
           status="success"
         ></el-progress>
       </div>
-
       <span slot="footer" class="dialog-footer">
         <el-button @click="rardilog = false">取 消</el-button>
-        <el-button type="primary" @click="rarSure('imgForm')">确 定</el-button>
+        <el-button type="primary" @click="rarSure">确 定</el-button>
       </span>
     </el-dialog>
     <!-- 上传单个封面 -->
     <el-dialog title="上传封面" :visible.sync="imgdilog" width="30%">
-      <el-form v-model="imgForm" ref="imgForm" label-width="80px">
-        <el-row>
-          <el-col :span="24">
-            <el-form-item
-              label="图书封面:"
-              :label-width="formLabelWidth"
-              prop="bookImageUrl"
-              ref="bookimg"
-            >
-              <el-upload
-                v-model="imgForm.bookImageUrl"
-                class="avatar-uploader"
-                action="https://www.mocky.io/v2/5185415ba171ea3a00704eed/posts/"
-                :show-file-list="false"
-                :on-success="uploadSuccessHandle"
-                :before-upload="beforeAvatarUpload"
-                accept="image/jpeg, image/jpg, image/png"
-              >
-                <img v-if="imgForm.bookImageUrl" :src="imgForm.bookImageUrl" class="avatar" />
-                <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-              </el-upload>
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-      <div class="el-upload__tip" style="margin-left: 40px;">请上传png、jpg及jpeg格式图片(大小2M以下)</div>
+      <el-upload
+        :before-upload="beforeAvatarUpload"
+        action="https://www.mocky.io/v2/5185415ba171ea3a00704eed/posts/"
+        :on-remove="uploadRemoveHandle"
+        :on-success="uploadSuccessHandle"
+        :on-error="imgFileError"
+        accept="image/jpeg, image/jpg, image/png"
+        :limit="1"
+        :file-list="fileImg"
+      >
+        <el-button size="small" type="primary">上传封面</el-button>
+      </el-upload>
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="imgdilog = false">取 消</el-button>
-        <el-button type="primary" @click="imgdilogSure('imgForm')">确 定</el-button>
+        <el-button type="primary" @click="imgdilogSure">确 定</el-button>
       </span>
     </el-dialog>
     <!-- 查看详情 -->
@@ -313,6 +335,8 @@
                 placeholder="请填写ISBN"
                 autocomplete="off"
                 size="small"
+                maxlength="20"
+                @keyup.native="btKeyUp"
               ></el-input>
             </el-form-item>
           </el-col>
@@ -323,6 +347,8 @@
                 placeholder="请填写图书名称"
                 autocomplete="off"
                 size="small"
+                maxlength="20"
+                @keyup.native="btKeyUp"
               ></el-input>
             </el-form-item>
           </el-col>
@@ -360,6 +386,8 @@
                   :key="item.value"
                   :label="item.label"
                   :value="item.value"
+                  maxlength="20"
+                  @keyup.native="btKeyUp"
                 ></el-option>
               </el-select>
             </el-form-item>
@@ -378,6 +406,8 @@
                 v-model.trim="watchForm.ZZJJ"
                 placeholder="暂无数据"
                 autocomplete="off"
+                maxlength="20"
+                @keyup.native="btKeyUp"
                 size="medium"
               ></el-input>
             </el-form-item>
@@ -391,6 +421,8 @@
                 v-model.trim="watchForm.NRJJ"
                 placeholder="暂无数据"
                 size="medium"
+                maxlength="20"
+                @keyup.native="btKeyUp"
               ></el-input>
             </el-form-item>
           </el-col>
@@ -430,16 +462,16 @@
         officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             :auto-upload="false"
           >
-            <el-button type="success"  icon="el-icon-upload">上传文件</el-button>
+            <el-button type="success" icon="el-icon-upload">上传文件</el-button>
           </el-upload>
-            <div v-show="importProgressFlag" class="head-img">
-        <el-progress
-          :text-inside="true"
-          :stroke-width="14"
-          :percentage="importProgressPercent"
-          status="success"
-        ></el-progress>
-      </div>
+          <div v-show="importProgressFlag" class="head-img">
+            <el-progress
+              :text-inside="true"
+              :stroke-width="14"
+              :percentage="importProgressPercent"
+              status="success"
+            ></el-progress>
+          </div>
         </el-col>
       </el-row>
 
@@ -468,15 +500,16 @@ import { Col } from "element-ui";
 export default {
   data() {
     return {
-      importProgressPercent:0,
-      importProgressFlag:false,
+      pageSize: 10,
+      importProgressPercent: 0,
+      importProgressFlag: false,
       progressFlag: false, //进度条初始值隐藏
       progressPercent: 0, //进度条初始值
       closeOnClickModal: false,
       limitUpload: 1,
       dialogVisible: false,
       seedilog: false,
-      fileList: [],
+      fileImg: [], //单个图片文件列表
       tablist: [],
       bookRules: {
         bookNumber: [
@@ -501,6 +534,7 @@ export default {
       currentPage: 1,
       bookSearchForm: {
         bookName: "",
+        bookNumber: "",
         bookCategory: ""
       },
       bookTableForm: {
@@ -519,7 +553,7 @@ export default {
         SJID: ""
       },
       imgForm: {
-        bookTableForm: ""
+        bookImageUrl: ""
       },
       watchForm: {},
       bookTableData: [],
@@ -541,27 +575,64 @@ export default {
       imgsjbh: "",
       rardilog: false,
       rarList: [],
-      rarfile: ""
+      rarfile: "",
+      bookstr: 0, //类别传值
+      rowyy: {
+        CJR: "1111",
+        CJR_NAME: "周星星",
+        GXR: null,
+        GXSJ: null,
+        LBXQ: "亲子教育",
+        NRJJ:
+          "你是否知道，你本人（没错，就是你！）比任何玩具都更让孩子喜欢和着迷呢？↵↵孩子们并不需要智力玩具或者电视节目，他们需要的是你！他们真正看重的是和你在一起的快乐时光，他们需要被重视，需要和父母单独相处而不被打扰的时间，需要和父母建立一生的亲密关系！↵↵在处理与孩子沟通的问题时，控制、放任、贿赂、威胁都是家长们常用的方法。这些不同类型的教育方法都有一个严重的缺陷，那就是可能导致孩子无法以恰当的方式来表达情感和进行沟通，从而无法建立起父母与孩子的亲密关系，孩子也就无法得到家庭关系所带来的归属感和安全感。↵↵与这些方法相比，情感引导的教育方法更加充满关爱，也更符合逻辑和人性。因为只有情感引导型父母才会把这些棘手的情况当成了解孩子内心世界的好机会，并且对孩子的情绪给予同情和理解，在沟通中增进亲子关系，进而提高孩子的情商和沟通能力，为他们将来的成长打下有益的基础。",
+        PCID: "421",
+        SJID: "1419",
+        ZZJJ:
+          "金伯莉·布雷恩，最早在世界上提出“情感引导式教育”的儿童教育专家，注册家庭与儿童心理治疗师，同时也是两个孩子的母亲。金伯莉是网络教育电视台www.TheGoToMom.TV的创始人和制作人，同时还是雅虎的节目制作人、雅虎妈妈博客协会的成员。她还经常在加州大学洛杉矶分校开办早期儿童大脑发育和正面管教策略方面的讲座，并担任美国健康和人文服务部下属的SAMHSA分支发起的一项早期儿童心理健康促进活动的社会推广总监。",
+        author: "（美）金伯莉·布雷恩",
+        bookCategory: "生活",
+        bookName: "你就是孩子最好的玩具",
+        bookNumber: "202005290058",
+        fmimg: false,
+        press: "南方出版社",
+        publishTime: "2020-07-06 11:40:09"
+      },
+      imgprogressFlag: false,
+      imgprogressPercent: 0
     };
   },
   watch: {
     dialogFormVisible: function(val, oldVa) {
       if (val == false) {
-        this.bookTableForm = {};
+        this.bookTableForm = {
+          bookName: "", //图书名称
+          press: "", //出版社
+          author: "", //作者
+          bookCategory: "", //图书类别
+          LBXQ: "",
+          PCID: this.activeName,
+          NRJJ: "",
+          ZZJJ: "",
+          CJR: "",
+          CJR_NAME: "",
+          GXR: "",
+          GXSJ: "",
+          SJID: ""
+        };
         this.$refs.bookTableForm.resetFields();
       }
     },
-    rardilog:function(val,oldval){
-      if(val==false){
-        this.progressFlag=false;
-        this.progressPercent=0;
-        this.rarList=[];
+    rardilog: function(val, oldval) {
+      if (val == false) {
+        this.progressFlag = false;
+        this.progressPercent = 0;
+        this.rarList = [];
       }
     },
-    dialogVisible:function(val,oldval){
-      if(val==false){
-        this.importProgressFlag=false;
-        this.importProgressPercent=0;
+    dialogVisible: function(val, oldval) {
+      if (val == false) {
+        this.importProgressFlag = false;
+        this.importProgressPercent = 0;
         this.fileTemp = null;
         // this.rarList=[];
       }
@@ -571,6 +642,13 @@ export default {
     this.initTab();
   },
   methods: {
+    //限制输入特殊字符
+    btKeyUp(e) {
+      e.target.value = e.target.value.replace(
+        /[`~@#$%^*_\-+=<>?:"{}|,.\/;'\\[\]·~@#￥%……*——\-+={}]/g,
+        ""
+      );
+    },
     init() {
       this.getBooksList();
     },
@@ -606,15 +684,20 @@ export default {
     formatJson(filterVal, jsonData) {
       return jsonData.map(v => filterVal.map(j => v[j]));
     },
-    // upfile() {},
+
     async initTab() {
       const res = await getBatchTab();
       const { list } = this.initRes(res);
-      this.tablist = list;
-      this.activeName = list[0].ID;
-      this.requestParams.ID = this.activeName;
-      this.getBooksList();
-      this.getBooksCategary();
+      console.log("list :>> ", list);
+      if (list.length == 0) {
+        this.$message.error("缺少批次，请先发布批次");
+      } else {
+        this.tablist = list;
+        this.activeName = list[0].ID;
+        this.requestParams.ID = this.activeName;
+        this.getBooksList();
+        this.getBooksCategary();
+      }
     },
     async getBooksCategary() {
       const res = await getSjlb();
@@ -732,29 +815,36 @@ export default {
       let formData = new FormData();
       formData.append("FILE", this.file);
       formData.append("pcid", this.activeName);
-      let that=this;
-      // this.importdata(formData);
-      // axios.post('/api/tsglAction.do?method=uploadFile',params)
+      let that = this;
+
       this.$axios({
         url: "/union-web/tsglAction.do?method=uploadFile",
+        // url: "/api/tsglAction.do?method=uploadFile",
         method: "post",
         data: formData,
         onUploadProgress: progressEvent => {
           // progressEvent.loaded:已上传文件大小
           // progressEvent.total:被上传文件的总大小
           //进度条
-          that.importProgressFlag=true;
+          that.importProgressFlag = true;
           that.importProgressPercent =
-            ((progressEvent.loaded / progressEvent.total) * 100)-1 | 0;
+            ((progressEvent.loaded / progressEvent.total) * 100 - 1) | 0;
         }
       })
         .then(res => {
-          console.log("sureimport :>> ", res);
-          if (res.status == 200 && that.importProgressPercent === 99) {
+          console.log("sureimport :>> ", res.data);
+          if (res.data.success == true && that.importProgressPercent === 99) {
             that.$message.success("上传成功！");
-             that.init();
+            that.init();
             that.importProgressPercent = 100;
-            that.dialogVisible=false;    
+            that.dialogVisible = false;
+          } else {
+            that.importProgressFlag = true;
+            that.importProgressPercent = 99;
+            that.$message({
+              message: res.data.msg,
+              type: "error"
+            });
           }
         })
         .catch(error => {
@@ -777,12 +867,17 @@ export default {
     //查询
     search() {
       let obj = this.invalidProperty(this.bookSearchForm);
-      const { bookName, bookCategory } = this.bookSearchForm;
+      const { bookName, bookCategory ,bookNumber} = this.bookSearchForm;
       this.requestParams.SJMC = bookName;
+      this.requestParams.SJBH = bookNumber;
       this.requestParams.LBID = bookCategory;
       this.init();
+      this.pageSize = 10;
+      this.currentPage = 1;
     },
     clear() {
+      this.pageSize = 10;
+      this.currentPage = 1;
       this.bookSearchForm = {};
       this.requestParams = {
         limit: 10,
@@ -818,18 +913,17 @@ export default {
       console.log("file :>> ", file);
     },
     rarRemove(file, fileList) {
-      this.rarList = [file.raw];
+      // this.rarList = [file.raw];
       this.rarfile = file.raw;
-      this.fileList= [file.raw];
-      console.log("rarRemove :>> ", file);
+      this.$forceUpdate();
+      console.log("rarRemove :>> ", file, fileList);
     },
     rarFileError(err, file, fileList) {
       console.log("err, file, fileList) :>> ", err, file, fileList);
     },
     rarSuccess(response, file, fileList) {
-
       console.log("res rarSuccess :>> ", response, file, fileList);
-      this.$forceUpdate()
+      // this.$forceUpdate();
     },
     rarSure() {
       // this.rardilog=false;
@@ -839,63 +933,77 @@ export default {
       let that = this;
       this.$axios({
         url: "/union-web/tsglAction.do?method=uploadAttachment",
+        // url: "/api/tsglAction.do?method=uploadAttachment",
         method: "post",
         data: formData,
         onUploadProgress: progressEvent => {
           // progressEvent.loaded:已上传文件大小
           // progressEvent.total:被上传文件的总大小
           //进度条
-          that.progressFlag=true;
+          that.progressFlag = true;
           that.progressPercent =
-            ((progressEvent.loaded / progressEvent.total) * 100)-1 | 0;
+            ((progressEvent.loaded / progressEvent.total) * 100 - 1) | 0;
         }
       })
         .then(res => {
-          console.log("res666 :>> ", res);
-          if (res.status == 200 && that.progressPercent === 99) {
+          console.log("res666 :>> ", res.data);
+          if (res.data.success == true && that.progressPercent === 99) {
             that.$message.success("上传成功！");
             that.progressPercent = 100;
-            that.rardilog=false;    
+            that.rardilog = false;
+          } else {
+            console.log("res.data :>> ", res.data.msg);
+            that.progressFlag = false;
+            that.progressPercent = 99;
+            that.$message({
+              message: res.data.msg,
+              type: "error"
+            });
           }
         })
         .catch(error => {
           that.progressFlag = false;
-          that.progressPercent = 0;
+          that.progressPercent = 99;
           that.$message({
             message: "上传失败！",
             type: "error"
           });
         });
-
-      // this.upfm(formData);
-      // this.axios.post('/union-web/tsglAction.do?method=uploadAttachment',params)
-      console.log("this.$axios :>> ", this.$axios);
     },
     beforeFileUpload(file) {
       const isZip = file.name.endsWith(".zip") || file.name.endsWith(".rar");
-      if (!isZip) {
-        this.$message.error("请选择zip或rar文件!");
-        this.rarList = []; //你那里的这个如果是数组就置为空
-        return false;
-      }
+      // if (!isZip) {
+      //   this.$message.error("请选择zip或rar文件!");
+      //   this.rarList = []; //你那里的这个如果是数组就置为空
+      //   return false;
+      // }
       this.rarList = [file];
       return false; // 若返回 false 或者返回 Promise 且被 reject，则停止上传。
       // 如果你是自己实现上传功能就要return false 反之不需要
     },
-
+    imgFileError(err, file, fileList) {
+      console.log("err--- :>> ", err, file, fileList);
+    },
     //上传封面图片
-    uploadSuccessHandle(res, file) {
+    uploadRemoveHandle(file, fileList) {
       this.imgfile = file.raw;
-      console.log("res file :>> ", res, file);
-      this.imgForm.bookImageUrl = URL.createObjectURL(file.raw);
+      console.log("uploadRemoveHandlee :>> ", this.imgfile, file);
+      this.$forceUpdate();
+    },
+    uploadSuccessHandle(response, file, fileList) {
+      this.imgfile = file.raw;
+      console.log("uploadSuccessHandle ", this.imgfile, file);
+
       this.$forceUpdate();
     },
     beforeAvatarUpload(file) {
-      const isLt2M = file.size / 1024 / 1024 < 2;
-      if (!isLt2M) {
-        this.$message.error("上传封面图片大小不能超过 2MB!");
-      }
-      return isLt2M;
+      // const isLt2M = file.size / 1024 / 1024 < 2;
+      // if (!isLt2M) {
+      //    this.fileImg = [];
+      //   this.$message.error("上传封面图片大小不能超过 2MB!");
+      // }
+      this.fileImg = [file];
+      return false;
     },
 
     //上传封面
@@ -906,28 +1014,30 @@ export default {
     },
     //上传图片确定事件
     imgdilogSure() {
-      // this.imgdilog=false;
-      if (!this.imgForm.bookImageUrl) {
-        this.$message.error("请先上传图书封面再提交！");
-      } else {
-        let formData = new FormData();
-        formData.append("file", this.imgfile);
-        formData.append("pcid", this.activeName);
-        formData.append("sjbh", this.imgsjbh);
-        this.upfm(formData);
-        console.log("formData :>> ", formData);
-      }
+      let formData = new FormData();
+      formData.append("file", this.imgfile);
+      formData.append("pcid", this.activeName);
+      formData.append("sjbh", this.imgsjbh);
+      this.upfm(formData);
+      console.log("formData :>> ", this.imgsjbh);
     },
     async upfm(obj) {
       const res = await uploadImg(obj);
-      if (res) {
+      console.log("res :>> ", res.data);
+      if (res.data.success) {
         this.imgdilog = false;
         this.rardilog = false;
+        this.init();
         this.$message.success("上传成功！");
         this.bookTableData.map(item => {
           if (item.bookNumber == this.imgsjbh) {
             item.fmimg = true;
           }
+        });
+      } else {
+        this.$message({
+          type: "error",
+          message: res.data.msg
         });
       }
     },
@@ -942,6 +1052,7 @@ export default {
 
     //page事件
     handleSizeChange(val) {
+      this.pageSize = val;
       this.requestParams.limit = val;
       this.init();
     },
@@ -970,7 +1081,47 @@ export default {
       } else if (this.multipleSelection.length == 1) {
         this.dialogFormVisible = true;
         this.upper = true;
-        this.bookTableForm = this.multipleSelection[0];
+        const {
+          author,
+          bookName,
+          press,
+          bookNumber,
+          bookCategory,
+          LBXQ,
+          PCID,
+          NRJJ,
+          ZZJJ,
+          CJR,
+          CJR_NAME,
+          GXR,
+          GXSJ,
+          SJID,
+          publishTime
+        } = this.multipleSelection[0];
+        this.bookTableForm.author = author;
+        this.bookTableForm.bookName = bookName;
+        this.bookTableForm.press = press;
+        this.bookTableForm.bookNumber = bookNumber;
+        this.bookTableForm.LBXQ = LBXQ;
+        this.bookTableForm.NRJJ = NRJJ;
+        this.bookTableForm.ZZJJ = ZZJJ;
+        this.bookTableForm.CJR = CJR;
+        this.bookTableForm.CJR_NAME = CJR_NAME;
+        this.bookTableForm.GXR = GXR;
+        this.bookTableForm.GXSJ = GXSJ;
+        this.bookTableForm.SJID = SJID;
+        this.bookTableForm.publishTime = publishTime;
+        this.optionAdd.map(item => {
+          if (item.label == bookCategory) {
+            this.bookstr = item.value;
+            this.bookTableForm.bookCategory = item.value;
+          }
+        });
+        console.log(" this.bookstr 11 :>> ", this.bookstr);
+        console.log(
+          "this.multipleSelection[0].bookCategory :>> ",
+          this.multipleSelection[0].bookCategory
+        );
       }
     },
     //删除
@@ -1004,6 +1155,10 @@ export default {
       this.$message.success("删除成功！");
       this.init();
     },
+    selechangehad(v) {
+      console.log("v :>> ", v);
+      // console.log(' this.bookTableForm.bookCategory :>> ',  this.bookTableForm.bookCategory);
+    },
     //提交
     sure(formName) {
       this.$refs[formName].validate(valid => {
@@ -1028,13 +1183,11 @@ export default {
 
           if (this.upper) {
             //修改
-            let str;
-            this.optionAdd.map(item => {
-              if (item.label == bookCategory) {
-                str = item.value;
-              }
-            });
-            console.log("str :>> ", str);
+
+            // console.log("str :>> ", str);
+
+            this.bookstr = bookCategory;
+            console.log("this.bookstr :>> ", this.bookstr);
             let obj = {
               SJID,
               SJBH: bookNumber,
@@ -1043,7 +1196,7 @@ export default {
               ZZJJ,
               NRJJ,
               SJCBS: press,
-              LBID: str,
+              LBID: this.bookstr,
               PCID: this.activeName,
               LBXQ,
               CJR,
@@ -1082,9 +1235,14 @@ export default {
     },
     async addData(obj) {
       const res = await addBookItem(obj);
-      if (res) {
+      if (res.success) {
+        console.log("res :>> ", res.success);
         this.init();
         this.$message.success("添加成功");
+      } else {
+        const str = res.substring(res.indexOf("'") + 1, res.indexOf("!')"));
+        //  console.log('str :>> ', str);
+        this.$message.error(`${str}!`);
       }
     },
     async upperdata(obj) {

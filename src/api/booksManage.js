@@ -25,7 +25,7 @@ return request({
   params   
 })
 }
-//批次详情
+//图书详情
 
 const  getBookInfo=(params)=> {
   return request({
@@ -35,27 +35,27 @@ const  getBookInfo=(params)=> {
     
   })
 }
-//批次列表新增
+//图书列表新增
 
 const  addBookItem=(params)=> {
   return request({
-    url: '/union-web/bookManagementAction.do?method=saveBookInfo',
+    url: '/union-web/tsglAction.do?method=saveBookInfo',
     method: 'post',
     params   
   })
 }
- //批次列表修改
+ //图书列表修改
 const  updateBookItem=(params)=> {
   return request({
-    url: '/union-web/bookManagementAction.do?method=saveBookInfo',
+    url: '/union-web/tsglAction.do?method=saveBookInfo',
     method: 'post',
     params   
   })
 }
-//批次列表删除条
+//图书列表删除条
 const  delBookInfos=(data)=> {
   return request({
-    url: '/union-web/bookManagementAction.do?method=delBookInfos',
+    url: '/union-web/tsglAction.do?method=delBookInfos',
     method: 'get',
     params:{objIds:data},
     paramsSerializer: params => {
@@ -96,7 +96,7 @@ const uploadImg=(params)=>{
 
 //development
 
-// 获取批次列表
+// // 获取批次列表
 // const  getBatchTab=(params)=> {
 //     return request({
 //       url: '/api/batchManagementAction.do?method=getBatchTab',
@@ -120,7 +120,7 @@ const uploadImg=(params)=>{
 //     params   
 //   })
 // }
-// //批次详情
+// //图书详情
 
 // const  getBookInfo=(params)=> {
 //     return request({
@@ -130,27 +130,27 @@ const uploadImg=(params)=>{
       
 //     })
 //   }
-//   //批次列表新增
+//   //图书列表新增
   
 //   const  addBookItem=(params)=> {
 //     return request({
-//       url: '/api/bookManagementAction.do?method=saveBookInfo',
+//       url: '/api/tsglAction.do?method=saveBookInfo',
 //       method: 'get',
 //       params   
 //     })
 //   }
-//    //批次列表修改
+//    //图书列表修改
 //   const  updateBookItem=(params)=> {
 //     return request({
-//       url: '/api/bookManagementAction.do?method=saveBookInfo',
+//       url: '/api/tsglAction.do?method=saveBookInfo',
 //       method: 'get',
 //       params   
 //     })
 //   }
-//   //批次列表删除条
+//   //图书列表删除条
 //   const  delBookInfos=(data)=> {
 //     return request({
-//       url: '/api/bookManagementAction.do?method=delBookInfos',
+//       url: '/api/tsglAction.do?method=delBookInfos',
 //       method: 'get',
 //       params:{objIds:data},
 //       paramsSerializer: params => {

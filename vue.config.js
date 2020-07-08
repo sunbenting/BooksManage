@@ -43,7 +43,7 @@ module.exports = {
 
     proxy:{
       '/api': {
-        target: 'http://192.168.43.109:7012/union-web',
+        target: 'http://192.168.43.18:7012/union-web',
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''

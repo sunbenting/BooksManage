@@ -2,7 +2,7 @@ import request from '@/utils/request'
 import qs from 'qs'
 
 
-//test
+// //test
 
 const  selectedComment=(data)=> {
   return request({
@@ -57,7 +57,7 @@ const  commentReject=(data)=> {
 //development
 
 
-// // 设为精选评论
+// 设为精选评论
 
 // const  selectedComment=(data)=> {
 //     return request({
